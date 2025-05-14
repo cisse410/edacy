@@ -10,12 +10,66 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
 
+use OpenApi\Annotations as OA;
+
+/**
+ * @OA\Tag(
+ *     name="Authentication",
+ *     description="Endpoints d'authentification"
+ * )
+ */
+
 class AuthController extends Controller
 {
     /**
-     * Register a new user
-     * @param Illuminate\Http\Request $request
-     * @return Illuminte\Http\JsonResponse
+     * @OA\Post(
+     *      path="/api/register",
+     *      operationId="register",
+     *      tags={"Authentication"},
+     *      summary="Créer un nouveau compte utilisateur",
+     *      description="Enregistre un nouvel utilisateur et retourne un token d'authentification",
+     *      @OA\RequestBody(
+     *          required=true,
+     *          @OA\JsonContent(
+     *              required={"name","email","password","password_confirmation"},
+     *              @OA\Property(property="name", type="string", example="Issakha CISSE", description="Nom de l'utilisateur"),
+     *              @OA\Property(property="email", type="string", format="email", example="admin@edacy.sn", description="Adresse email"),
+     *              @OA\Property(property="password", type="string", format="password", minLength=8, example="password123", description="Mot de passe (min 8 caractères)"),
+     *              @OA\Property(property="password_confirmation", type="string", format="password", example="password123", description="Confirmation du mot de passe")
+     *          )
+     *      ),
+     *      @OA\Response(
+     *          response=201,
+     *          description="Utilisateur créé avec succès",
+     *          @OA\JsonContent(
+     *              @OA\Property(property="access_token", type="string", example="1|a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0"),
+     *              @OA\Property(property="token_type", type="string", example="Bearer"),
+     *              @OA\Property(property="message", type="string", example="Bienvenue ! Vous pouvez vous connectez maintenant."),
+     *              @OA\Property(property="User", ref="#/components/schemas/User")
+     *          )
+     *      ),
+     *      @OA\Response(
+     *          response=422,
+     *          description="Erreur de validation",
+     *          @OA\JsonContent(
+     *              @OA\Property(property="message", type="string", example="Erreur lors de la création de votre compte."),
+     *              @OA\Property(
+     *                  property="errors",
+     *                  type="object",
+     *                  @OA\Property(
+     *                      property="email",
+     *                      type="array",
+     *                      @OA\Items(type="string", example="Ce mail existe déjà")
+     *                  ),
+     *                  @OA\Property(
+     *                      property="password",
+     *                      type="array",
+     *                      @OA\Items(type="string", example="Mot de passe trop court (min 8 caractères)")
+     *                  )
+     *              )
+     *          )
+     *      )
+     * )
      *
      * @author CISSE410 <a href="https://www.github.com/cisse410>#CISSE410</a>
      */
@@ -53,11 +107,49 @@ class AuthController extends Controller
     }
 
     /**
-     * Login a user
-     * @param Illuminate\Http\Request $request
-     * @return Illuminate\Http\JsonResponse
-     * @throws Illuminate\Validation\ValidationException
+     * @OA\Post(
+     *      path="/api/login",
+     *      operationId="login",
+     *      tags={"Authentication"},
+     *      summary="Connexion utilisateur",
+     *      description="Authentifie un utilisateur et retourne un token d'accès",
+     *      @OA\RequestBody(
+     *          required=true,
+     *          @OA\JsonContent(
+     *              required={"email","password"},
+     *              @OA\Property(property="email", type="string", format="email", example="admin@edacy.sn", description="Adresse email"),
+     *              @OA\Property(property="password", type="string", format="password", example="password123", description="Mot de passe")
+     *          )
+     *      ),
+     *      @OA\Response(
+     *          response=200,
+     *          description="Connexion réussie",
+     *          @OA\JsonContent(
+     *              @OA\Property(property="access_token", type="string", example="1|a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0"),
+     *              @OA\Property(property="token_type", type="string", example="Bearer"),
+     *              @OA\Property(property="message", type="string", example="Content de vous revoir !"),
+     *              @OA\Property(property="user", ref="#/components/schemas/User")
+     *          )
+     *      ),
+     *      @OA\Response(
+     *          response=422,
+     *          description="Identifiants invalides",
+     *          @OA\JsonContent(
+     *              @OA\Property(property="message", type="string", example="Erreur lors de la connexion."),
+     *              @OA\Property(
+     *                  property="errors",
+     *                  type="object",
+     *                  @OA\Property(
+     *                      property="email",
+     *                      type="array",
+     *                      @OA\Items(type="string", example="Les informations de connexion fournies sont incorrectes.")
+     *                  )
+     *              )
+     *          )
+     *      )
+     * )
      *
+     * @throws \Illuminate\Validation\ValidationException
      * @author CISSE410 <a href="https://github.com/cisse410">#CISSE410</a>
      */
 
@@ -92,9 +184,25 @@ class AuthController extends Controller
     }
 
     /**
-     * Logout a user that's mean revoke the token
-     * @param Illuminate\Http\Request $request
-     * @return Illuminate\Http\JsonResponse
+     * @OA\Post(
+     *      path="/api/logout",
+     *      operationId="logout",
+     *      tags={"Authentication"},
+     *      summary="Déconnexion utilisateur",
+     *      description="Révoque le token d'authentification actuel",
+     *      security={{"bearerAuth":{}}},
+     *      @OA\Response(
+     *          response=200,
+     *          description="Déconnexion réussie",
+     *          @OA\JsonContent(
+     *              @OA\Property(property="message", type="string", example="Déconnexion réussie !")
+     *          )
+     *      ),
+     *      @OA\Response(
+     *          response=401,
+     *          description="Non authentifié"
+     *      )
+     * )
      *
      * @author CISSE410 <a href="https://github.com/cisse410>#CISSE410</a>
      */
@@ -109,12 +217,27 @@ class AuthController extends Controller
     }
 
     /**
-     * Recuperer l'utilisateur connecté
-     * @param Illuminate\Http\Request $request
-     * @return Illuminate\Http\JsonResponse
+     * @OA\Get(
+     *      path="/api/user",
+     *      operationId="currentUser",
+     *      tags={"Authentication"},
+     *      summary="Obtenir l'utilisateur connecté",
+     *      description="Retourne les informations de l'utilisateur actuellement authentifié",
+     *      security={{"bearerAuth":{}}},
+     *      @OA\Response(
+     *          response=200,
+     *          description="Informations de l'utilisateur",
+     *          @OA\JsonContent(ref="#/components/schemas/User")
+     *      ),
+     *      @OA\Response(
+     *          response=401,
+     *          description="Non authentifié"
+     *      )
+     * )
      *
      * @author CISSE410 <a href="https://github.com/cisse410">#CISSE410</a>
      */
+
     public function user(Request $request) : JsonResponse {
         return response()->json($request->user());
     }
